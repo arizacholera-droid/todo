@@ -46,6 +46,9 @@
   .notes-save:disabled { opacity: 0.4; cursor: default; }
   .notes-saved { font-size: 11px; color: #22c55e; margin-left: 6px; opacity: 0; transition: opacity 0.3s; }
   .notes-saved.show { opacity: 1; }
+  .loc-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 99px; border: none; cursor: pointer; flex-shrink: 0; background: #f5f5f4; color: #78716c; transition: background 0.15s, color 0.15s; user-select: none; }
+  .loc-tag:hover { background: #e7e5e4; color: #292524; }
+  .loc-tag.set { background: #292524; color: #fff; }
   .todo-card.done { opacity: 0.45; }
   .todo-card.done .todo-title { text-decoration: line-through; color: #a8a29e; }
   .toggle-done-btn { font-size: 12px; color: #a8a29e; background: none; border: none; cursor: pointer; padding: 8px 0; display: block; margin: 4px auto 0; }
@@ -108,11 +111,7 @@ async function loadTodos() {
       }
       setSyncStatus('ok', label);
     } else {
-      setSyncStatus('ok', '已載入（尚無同步紀錄）');
-    }
-    render();
-  } catch(e) {
-    setSyncStatus('error', '載入失敗');
+      setSyncStatus('ok', '已載入（尚無同步紀錄）'入失敗');
   }
 }
 
@@ -131,6 +130,25 @@ async function toggleDone(id, isDone) {
   } catch(e) {
     setSyncStatus('error', '儲存失敗');
   }
+}
+
+const LOC_OPTIONS = ['', '桌面 Cowork', '手機', '紙本', '電話'];
+const LOC_ICONS  = ['📍', '💻', '📱', '📄', '📞'];
+
+async function cycleLocation(id, currentLoc, tagEl) {
+  const idx = LOC_OPTIONS.indexOf(currentLoc);
+  const next = LOC_OPTIONS[(idx + 1) % LOC_OPTIONS.length];
+  tagEl.textContent = next ? LOC_ICONS[LOC_OPTIONS.indexOf(next)] + ' ' + next : '📍 場所';
+  tagEl.className = 'loc-tag' + (next ? ' set' : '');
+  var t = todos.find(function(t) { return t.id === id; });
+  if (t) t.location = next;
+  try {
+    await fetch(SB_URL + '/rest/v1/todos', {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify({ id: id, location: next, updated_at: new Date().toISOString() })
+    });
+  } catch(e) {}
 }
 
 async function saveNotes(id, notes, btn, savedMsg) {
@@ -157,6 +175,8 @@ function toggleShowDone() {
   render();
 }
 
+function toggleCard(el) { el.classList.toggle('open'); }
+
 function updateProgress() {
   var total = todos.length;
   var done = todos.filter(function(t) { return t.done; }).length;
@@ -168,17 +188,22 @@ function updateProgress() {
 function buildCard(item, color) {
   var card = document.createElement('div');
   card.className = 'todo-card' + (item.done ? ' done' : '');
+
   var header = document.createElement('div');
   header.className = 'todo-header';
   header.onclick = function() { card.classList.toggle('open'); };
+
   var dot = document.createElement('div');
   dot.className = 'dot';
   dot.style.background = color;
+
   var titleEl = document.createElement('div');
   titleEl.className = 'todo-title';
   titleEl.textContent = item.title;
+
   header.appendChild(dot);
   header.appendChild(titleEl);
+
   if (item.url) {
     var link = document.createElement('a');
     link.className = 'open-link-btn';
@@ -190,20 +215,36 @@ function buildCard(item, color) {
     link.textContent = '開啟 ↗';
     link.onclick = function(e) { e.stopPropagation(); };
     header.appendChild(link);
+  } else {
+    var locTag = document.createElement('button');
+    var locVal = item.location || '';
+    var locIdx = LOC_OPTIONS.indexOf(locVal);
+    locTag.className = 'loc-tag' + (locVal ? ' set' : '');
+    locTag.textContent = locVal ? (LOC_ICONS[locIdx] + ' ' + locVal) : '📍 場所';
+    locTag.onclick = function(e) {
+      e.stopPropagation();
+      cycleLocation(item.id, item.location || '', locTag);
+    };
+    header.appendChild(locTag);
   }
+
   var chev = document.createElement('div');
   chev.className = 'chevron';
   chev.textContent = '▼';
   header.appendChild(chev);
+
   var ctx = document.createElement('div');
   ctx.className = 'todo-context';
+
   var tag = document.createElement('div');
   tag.className = 'session-tag';
   tag.style.background = color + '18';
   tag.style.color = color;
   tag.textContent = item.session_name || '';
+
   var bodyP = document.createElement('p');
   bodyP.innerHTML = (item.context || '').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+
   var btn = document.createElement('button');
   btn.className = 'done-btn';
   btn.textContent = item.done ? '↩ 取消完成' : '✓ 標為完成';
@@ -212,35 +253,45 @@ function buildCard(item, color) {
     btn.disabled = true;
     toggleDone(item.id, !item.done);
   };
+
+  // Notes section
   var notesWrap = document.createElement('div');
   notesWrap.className = 'notes-wrap';
+
   var notesLabel = document.createElement('div');
   notesLabel.className = 'notes-label';
   notesLabel.textContent = '📝 手機備忘';
+
   var notesTa = document.createElement('textarea');
   notesTa.className = 'notes-ta';
   notesTa.placeholder = '在手機上記錄處理結果或下一步提示…';
   notesTa.value = item.notes || '';
   notesTa.onclick = function(e) { e.stopPropagation(); };
+
   var notesRow = document.createElement('div');
   notesRow.style.display = 'flex';
   notesRow.style.alignItems = 'center';
+
   var saveBtn = document.createElement('button');
   saveBtn.className = 'notes-save';
   saveBtn.textContent = '儲存備忘';
+
   var savedMsg = document.createElement('span');
   savedMsg.className = 'notes-saved';
   savedMsg.textContent = '✓ 已儲存';
+
   saveBtn.onclick = function(e) {
     e.stopPropagation();
     saveBtn.disabled = true;
     saveNotes(item.id, notesTa.value, saveBtn, savedMsg);
   };
+
   notesRow.appendChild(saveBtn);
   notesRow.appendChild(savedMsg);
   notesWrap.appendChild(notesLabel);
   notesWrap.appendChild(notesTa);
   notesWrap.appendChild(notesRow);
+
   ctx.appendChild(tag);
   ctx.appendChild(bodyP);
   ctx.appendChild(btn);
@@ -254,12 +305,14 @@ function render() {
   updateProgress();
   var container = document.getElementById('todo-list');
   container.innerHTML = '';
+
   var groups = {};
   var projectColors = {};
   todos.forEach(function(t) {
     if (!groups[t.project]) { groups[t.project] = []; projectColors[t.project] = t.color; }
     groups[t.project].push(t);
   });
+
   var anyVisible = false;
   Object.keys(groups).forEach(function(project) {
     var items = groups[project];
@@ -267,18 +320,22 @@ function render() {
     var visible = showDone ? items : items.filter(function(t) { return !t.done; });
     if (!visible.length) return;
     anyVisible = true;
+
     var groupEl = document.createElement('div');
     groupEl.className = 'project-group';
+
     var lbl = document.createElement('div');
     lbl.className = 'project-label';
     lbl.style.color = color;
     lbl.textContent = project;
     groupEl.appendChild(lbl);
+
     visible.forEach(function(item) {
       groupEl.appendChild(buildCard(item, color));
     });
     container.appendChild(groupEl);
   });
+
   if (!anyVisible) {
     container.innerHTML = '<div class="empty">🎉 所有項目都完成了！</div>';
   }
