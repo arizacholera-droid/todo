@@ -7,332 +7,69 @@
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f5f5f4;
-    color: #1c1917;
-    padding: 24px 16px;
-    min-height: 100vh;
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f4; color: #1c1917; padding: 24px 16px; min-height: 100vh; }
   h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-  .subtitle { font-size: 12px; color: #78716c; margin-bottom: 20px; }
-  .sync-status {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; color: #78716c;
-    margin-bottom: 20px;
-  }
-  .sync-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #a8a29e; flex-shrink: 0;
-    transition: background 0.3s;
-  }
+  .subtitle { font-size: 12px; color: #78716c; margin-bottom: 12px; }
+  .sync-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .sync-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #78716c; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #a8a29e; flex-shrink: 0; transition: background 0.3s; }
   .sync-dot.ok { background: #22c55e; }
   .sync-dot.loading { background: #f59e0b; animation: pulse 1s infinite; }
   .sync-dot.error { background: #ef4444; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
   .progress-label { font-size: 11px; color: #78716c; margin-bottom: 6px; }
   .progress-bar-wrap { background: #e7e5e4; border-radius: 99px; height: 4px; margin-bottom: 24px; overflow: hidden; }
   .progress-bar-fill { height: 100%; border-radius: 99px; background: #292524; transition: width 0.4s; }
   .project-group { margin-bottom: 20px; }
-  .project-label {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.08em; color: #78716c; margin-bottom: 8px; padding-left: 4px;
-  }
-  .todo-card {
-    background: #fff; border-radius: 10px; margin-bottom: 6px;
-    border: 1px solid #e7e5e4; overflow: hidden; transition: box-shadow 0.15s;
-  }
+  .project-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #78716c; margin-bottom: 8px; padding-left: 4px; }
+  .todo-card { background: #fff; border-radius: 10px; margin-bottom: 6px; border: 1px solid #e7e5e4; overflow: hidden; transition: box-shadow 0.15s; }
   .todo-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
-  .todo-header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 13px 16px; cursor: pointer; user-select: none;
-  }
+  .todo-header { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; user-select: none; }
   .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .todo-title { font-size: 14px; font-weight: 500; flex: 1; line-height: 1.4; }
   .chevron { font-size: 12px; color: #a8a29e; transition: transform 0.2s; flex-shrink: 0; }
   .todo-card.open .chevron { transform: rotate(180deg); }
-  .todo-context {
-    display: none; padding: 12px 16px 14px 38px;
-    font-size: 13px; color: #57534e; line-height: 1.6;
-    border-top: 1px solid #f5f5f4;
-  }
+  .todo-context { display: none; padding: 12px 16px 14px 38px; font-size: 13px; color: #57534e; line-height: 1.6; border-top: 1px solid #f5f5f4; }
   .todo-card.open .todo-context { display: block; }
-  .session-tag {
-    display: inline-block; font-size: 10px; font-weight: 600;
-    padding: 2px 7px; border-radius: 99px; margin-bottom: 8px;
-    text-transform: uppercase; letter-spacing: 0.05em;
-  }
-  .done-btn {
-    margin-top: 12px; display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12px; font-weight: 500; color: #78716c;
-    background: #f5f5f4; border: none; border-radius: 6px;
-    padding: 5px 10px; cursor: pointer; transition: background 0.15s, color 0.15s;
-  }
+  .session-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 99px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .done-btn { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #78716c; background: #f5f5f4; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: background 0.15s; }
   .done-btn:hover { background: #e7e5e4; color: #1c1917; }
   .done-btn:disabled { opacity: 0.5; cursor: default; }
   .todo-card.done { opacity: 0.45; }
   .todo-card.done .todo-title { text-decoration: line-through; color: #a8a29e; }
-  .show-done-btn {
-    font-size: 12px; color: #a8a29e; background: none;
-    border: none; cursor: pointer; padding: 8px 0; display: block; margin: 0 auto;
-  }
-  .show-done-btn:hover { color: #78716c; }
+  .toggle-done-btn { font-size: 12px; color: #a8a29e; background: none; border: none; cursor: pointer; padding: 8px 0; display: block; margin: 4px auto 0; }
+  .toggle-done-btn:hover { color: #78716c; }
+  .empty { text-align: center; color: #a8a29e; font-size: 13px; padding: 40px 0; }
 </style>
 </head>
 <body>
-
 <h1>Brandin 的下一步</h1>
-<p class="subtitle">從 12 個 Cowork 對話整理 · 7 個專案</p>
-<div class="sync-status">
-  <div class="sync-dot loading" id="sync-dot"></div>
-  <span id="sync-label">同步中…</span>
+<p class="subtitle">每小時自動從 Cowork 對話更新</p>
+<div class="sync-row">
+  <div class="sync-status">
+    <div class="sync-dot loading" id="sync-dot"></div>
+    <span id="sync-label">載入中…</span>
+  </div>
 </div>
-
 <div class="progress-label" id="progress-text"></div>
-<div class="progress-bar-wrap">
-  <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
-</div>
-
+<div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
 <div id="todo-list"></div>
-<button class="show-done-btn" id="toggle-done-btn" onclick="toggleDone()">顯示已完成項目</button>
+<button class="toggle-done-btn" id="toggle-done-btn">顯示已完成項目</button>
 
 <script>
-const SUPABASE_URL = 'https://hwlbadvxnsppojaoqkeh.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGJhZHZ4bnNwcG9qYW9xa2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzgyOTgsImV4cCI6MjA5NzQ1NDI5OH0.iG4Z0YYn7aP_UGTZnx-hYBOrxjTS0NsHi0SaYAraiy0';
-
-const todos = [
-  {
-    project: "Taiwan Unread 電子報",
-    color: "#2563eb",
-    sessionName: "Paid newsletter concept",
-    items: [
-      {
-        id: "tw1",
-        title: "找《裸山》翻譯段落（母親角色在城市移動，300–400字）",
-        context: "這是 Issue #1 的最後一塊拼圖。選書文章、作者介紹、Context、Reading Bridges 全部完成了，只差這個翻譯段落就可以發刊。\n\n挑選場景時找：母親在熟悉空間移動（街道、市場、捷運），但兒子不在了。韓麗珠最獨特的聲音在這類場景最清晰——表面動作精確，內心狀態被刻意扣住。找讀者不需要背景知識就能在身體上感受到的段落。"
-      },
-      {
-        id: "tw2",
-        title: "建立 Substack 帳號並發布 Issue #1",
-        context: "About 頁文案已寫好，名稱「Taiwan Unread」，定價 $9/月 · $85/年，前 3–5 期設為免費。\n\n記得：填入書店經營年份（About 頁面有一個 [X years] 佔位符），然後把完整文案貼上。翻譯段落補進去後，整期就可以發了。"
-      }
-    ]
-  },
-  {
-    project: "緬因的森林（梭羅翻譯出版社）",
-    color: "#16a34a",
-    sessionName: "Chinese publishing startup",
-    items: [
-      {
-        id: "mf1",
-        title: "讀第一章譯稿，給翻譯風格反饋",
-        context: "目前第 1–3 章已翻譯完成，第四章之後還沒開始。你需要讀第一章並標出任何不對的地方（詞彙、句式、整體語氣太文/太白？），Claude 會根據你的反饋整理成翻譯風格指南，確保第 4–12 章風格一致。\n\n這一步做完才能開始自動化排程翻譯。"
-      },
-      {
-        id: "mf2",
-        title: "在 Substack 建立「緬因的森林」帳號",
-        context: "設定資料已就緒：名稱「緬因的森林」、URL slug: mainewoodspress、Description 和第一篇選書文章都已寫好。帳號建好後先把選書文章貼上，設為免費公開發布。"
-      }
-    ]
-  },
-  {
-    project: "系統架構（Dropbox / iCloud）",
-    color: "#d97706",
-    sessionName: "系統架構 Dropbox、iCloud等",
-    items: [
-      {
-        id: "sys1",
-        title: "解決 iCloud 搬移卡住問題",
-        context: "你把 iCloud Desktop & Documents 關掉後，檔案開始搬移，但已跑好幾個小時沒有完成。\n\n建議：如果搬移視窗還在，直接按 X 取消。然後到 iCloud Drive 右鍵 Download Now 先把檔案下載到本機，再手動拖進 Dropbox 資料夾。"
-      },
-      {
-        id: "sys2",
-        title: "處理桌面兩個 Others 資料夾",
-        context: "桌面出現了兩個 Others 子資料夾，其中一個是原本的，另一個是 iCloud 搬移時因名稱衝突自動產生的。\n\n需要：點進兩個資料夾確認內容是否重複，把新版的合併到舊版，刪掉多餘的那個。"
-      },
-      {
-        id: "sys3",
-        title: "設定 rclone 同步 Dropbox → 外接硬碟",
-        context: "目標架構：Dropbox 雲端（507GB）為唯一 source of truth，Mac 本機 online-only 按需存取，外接硬碟接上時完整同步。\n\n需要安裝 rclone 並設定：直接連 Dropbox API，把雲端完整同步到外接硬碟，自動化成「每次接上硬碟就執行」。繼續在「系統架構」對話裡進行。"
-      }
-    ]
-  },
-  {
-    project: "野果網站",
-    color: "#7c3aed",
-    sessionName: "野果網站",
-    items: [
-      {
-        id: "yg1",
-        title: "用 GitHub Desktop clone repo，放入 PROJECT_BRIEF.md",
-        context: "Repo 已建好（github.com/arizacholera-droid/wildgain-website），GitHub Desktop 也裝好了。\n\n步驟：Clone → 選本機路徑 → 把 PROJECT_BRIEF.md 複製進去 → Commit → Push。朋友才能看到這份文件並快速了解專案狀態。"
-      },
-      {
-        id: "yg2",
-        title: "把朋友加入 GitHub repo 為 Collaborator",
-        context: "朋友需要先建好 GitHub 帳號。\n\n然後：github.com/arizacholera-droid/wildgain-website → Settings → Collaborators → Add people。加入後朋友就可以 clone 並直接參與開發。"
-      }
-    ]
-  },
-  {
-    project: "SugarBaeTW",
-    color: "#db2777",
-    sessionName: "自建包養網",
-    items: [
-      {
-        id: "sb1",
-        title: "建 Instagram 帳號測試藝文/國際包養定位",
-        context: "在花任何錢之前，先用 Instagram 免費驗證市場。發幾篇藝文交友相關內容，看看有沒有人互動。\n\n這比直接買域名（sugarbae.cc，第一年 $5.98）+ 建 Bubble 網站風險低很多。如果 IG 有回應再繼續投入。"
-      }
-    ]
-  },
-  {
-    project: "文學創作資料庫",
-    color: "#0891b2",
-    sessionName: "Literary genre short story",
-    items: [
-      {
-        id: "lit1",
-        title: "把 Google Drive 文學草稿下載到本機並連接 Cowork",
-        context: "你想建立一個包含所有文學創作段落、句子草稿的資料庫，方便寫作時找靈感和連結素材。\n\n步驟：從 Google Drive 下載到本機資料夾 → 在 Cowork 連接那個資料夾 → 讓 Claude 讀取並整理成結構化資料庫。完成後就可以繼續討論短篇小說大綱。"
-      }
-    ]
-  },
-  {
-    project: "戲劇配樂",
-    color: "#b45309",
-    sessionName: "Drama soundtrack composition",
-    items: [
-      {
-        id: "drama1",
-        title: "上傳劇本檔案",
-        context: "你要為一齣戲劇寫配樂。Claude 需要先讀取劇本，才能幫你建立工作儀表板（場景進度追蹤、角色樂器對應、配樂備忘錄）。\n\n直接在「Drama soundtrack composition」對話裡上傳劇本檔案。"
-      }
-    ]
-  }
-];
-
-// --- Supabase helpers ---
-async function sbFetch(path, opts = {}) {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal',
-      ...opts.headers
-    },
-    ...opts
-  });
-  return res;
-}
-
-async function loadDoneState() {
-  setSyncStatus('loading', '同步中…');
-  try {
-    const res = await sbFetch('todos?done=eq.true&select=id');
-    if (!res.ok) throw new Error('fetch failed');
-    const rows = await res.json();
-    doneIds = new Set(rows.map(r => r.id));
-    setSyncStatus('ok', '已同步');
-    renderAll();
-    updateProgress();
-  } catch(e) {
-    setSyncStatus('error', '同步失敗，使用本機資料');
-    doneIds = new Set(JSON.parse(localStorage.getItem('todo-done') || '[]'));
-    renderAll();
-    updateProgress();
-  }
-}
-
-async function upsertDone(id, done) {
-  setSyncStatus('loading', '儲存中…');
-  try {
-    await sbFetch('todos', {
-      method: 'POST',
-      headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify({ id, done, updated_at: new Date().toISOString() })
-    });
-    setSyncStatus('ok', '已儲存');
-    localStorage.setItem('todo-done', JSON.stringify([...doneIds]));
-  } catch(e) {
-    setSyncStatus('error', '儲存失敗');
-    localStorage.setItem('todo-done', JSON.stringify([...doneIds]));
-  }
-}
-
-function setSyncStatus(state, label) {
-  const dot = document.getElementById('sync-dot');
-  dot.className = 'sync-dot ' + state;
-  document.getElementById('sync-label').textContent = label;
-}
-
-// --- State ---
-let doneIds = new Set();
-let showDone = false;
-
-function toggleDone() {
-  showDone = !showDone;
-  document.getElementById('toggle-done-btn').textContent = showDone ? '隱藏已完成項目' : '顯示已完成項目';
-  renderAll();
-}
-
-async function markDone(id, el) {
-  el.disabled = true;
-  const nowDone = !doneIds.has(id);
-  if (nowDone) doneIds.add(id); else doneIds.delete(id);
-  await upsertDone(id, nowDone);
-  renderAll();
-  updateProgress();
-}
-
-function updateProgress() {
-  const total = todos.reduce((s, g) => s + g.items.length, 0);
-  const done = doneIds.size;
-  const pct = total ? Math.round(done / total * 100) : 0;
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-text').textContent = `${done} / ${total} 項完成`;
-}
-
-function toggleCard(cardEl) { cardEl.classList.toggle('open'); }
-
-function renderAll() {
-  const container = document.getElementById('todo-list');
-  container.innerHTML = '';
-  todos.forEach(group => {
-    const visibleItems = showDone ? group.items : group.items.filter(i => !doneIds.has(i.id));
-    if (visibleItems.length === 0) return;
-    const groupEl = document.createElement('div');
-    groupEl.className = 'project-group';
-    const label = document.createElement('div');
-    label.className = 'project-label';
-    label.style.color = group.color;
-    label.textContent = group.project;
-    groupEl.appendChild(label);
-    visibleItems.forEach(item => {
-      const isDone = doneIds.has(item.id);
-      const card = document.createElement('div');
-      card.className = 'todo-card' + (isDone ? ' done' : '');
-      card.innerHTML = `
-        <div class="todo-header" onclick="toggleCard(this.parentElement)">
-          <div class="dot" style="background:${group.color}"></div>
-          <div class="todo-title">${item.title}</div>
-          <div class="chevron">▼</div>
-        </div>
-        <div class="todo-context">
-          <div class="session-tag" style="background:${group.color}18;color:${group.color}">${group.sessionName}</div>
-          <p>${item.context.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')}</p>
-          <button class="done-btn" onclick="event.stopPropagation(); markDone('${item.id}', this)">
-            ${isDone ? '↩ 取消完成' : '✓ 標為完成'}
-          </button>
-        </div>`;
-      groupEl.appendChild(card);
-    });
-    container.appendChild(groupEl);
-  });
-}
-
-loadDoneState();
+const SB_URL = 'https://hwlbadvxnsppojaoqkeh.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGJhZHZ4bnNwcG9qYW9xa2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzgyOTgsImV4cCI6MjA5NzQ1NDI5OH0.iG4Z0YYn7aP_UGTZnx-hYBOrxjTS0NsHi0SaYAraiy0';
+const HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' };
+let todos = [], showDone = false;
+function setSyncStatus(state, label) { document.getElementById('sync-dot').className = 'sync-dot ' + state; document.getElementById('sync-label').textContent = label; }
+async function loadTodos() { setSyncStatus('loading', '載入中…'); try { const res = await fetch(SB_URL + '/rest/v1/todos?select=*&order=project,sort_order', { headers: HEADERS }); if (!res.ok) throw new Error(); todos = await res.json(); setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'})); render(); } catch(e) { setSyncStatus('error', '載入失敗'); } }
+async function toggleDone(id, isDone) { setSyncStatus('loading', '儲存中…'); try { await fetch(SB_URL + '/rest/v1/todos', { method: 'POST', headers: HEADERS, body: JSON.stringify({ id, done: isDone, updated_at: new Date().toISOString() }) }); const t = todos.find(t => t.id === id); if (t) t.done = isDone; setSyncStatus('ok', '已儲存'); render(); } catch(e) { setSyncStatus('error', '儲存失敗'); } }
+function toggleShowDone() { showDone = !showDone; document.getElementById('toggle-done-btn').textContent = showDone ? '隱藏已完成項目' : '顯示已完成項目'; render(); }
+function toggleCard(el) { el.classList.toggle('open'); }
+function updateProgress() { const total = todos.length, done = todos.filter(t => t.done).length, pct = total ? Math.round(done/total*100) : 0; document.getElementById('progress-fill').style.width = pct + '%'; document.getElementById('progress-text').textContent = done + ' / ' + total + ' 項完成'; }
+function render() { updateProgress(); const container = document.getElementById('todo-list'); container.innerHTML = ''; const groups = {}, colors = {}; todos.forEach(t => { if (!groups[t.project]) { groups[t.project] = []; colors[t.project] = t.color; } groups[t.project].push(t); }); let any = false; Object.entries(groups).forEach(([project, items]) => { const visible = showDone ? items : items.filter(t => !t.done); if (!visible.length) return; any = true; const color = colors[project]; const g = document.createElement('div'); g.className = 'project-group'; const lbl = document.createElement('div'); lbl.className = 'project-label'; lbl.style.color = color; lbl.textContent = project; g.appendChild(lbl); visible.forEach(item => { const card = document.createElement('div'); card.className = 'todo-card' + (item.done ? ' done' : ''); const ctx = (item.context||'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>'); card.innerHTML = '<div class="todo-header" onclick="toggleCard(this.parentElement)"><div class="dot" style="background:'+color+'"></div><div class="todo-title">'+item.title+'</div><div class="chevron">▼</div></div><div class="todo-context"><div class="session-tag" style="background:'+color+'18;color:'+color+'">'+(item.session_name||'')+'</div><p>'+ctx+'</p><button class="done-btn" onclick="event.stopPropagation();this.disabled=true;toggleDone(''+item.id+'','+(!item.done)+')">'+(item.done?'↩ 取消完成':'✓ 標為完成')+'</button></div>'; g.appendChild(card); }); container.appendChild(g); }); if (!any) container.innerHTML = '<div class="empty">🎉 所有項目都完成了！</div>'; }
+document.getElementById('toggle-done-btn').onclick = toggleShowDone;
+loadTodos();
 </script>
 </body>
 </html>
