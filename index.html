@@ -27,6 +27,8 @@
   .todo-header { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; user-select: none; }
   .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .todo-title { font-size: 14px; font-weight: 500; flex: 1; line-height: 1.4; }
+  .open-link-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; flex-shrink: 0; transition: opacity 0.15s; white-space: nowrap; }
+  .open-link-btn:hover { opacity: 0.75; }
   .chevron { font-size: 12px; color: #a8a29e; transition: transform 0.2s; flex-shrink: 0; }
   .todo-card.open .chevron { transform: rotate(180deg); }
   .todo-context { display: none; padding: 12px 16px 14px 38px; font-size: 13px; color: #57534e; line-height: 1.6; border-top: 1px solid #f5f5f4; }
@@ -96,7 +98,7 @@ async function toggleDone(id, isDone) {
       headers: HEADERS,
       body: JSON.stringify({ id: id, done: isDone, updated_at: new Date().toISOString() })
     });
-    const t = todos.find(function(t) { return t.id === id; });
+    var t = todos.find(function(t) { return t.id === id; });
     if (t) t.done = isDone;
     setSyncStatus('ok', '已儲存');
     render();
@@ -114,50 +116,63 @@ function toggleShowDone() {
 function toggleCard(el) { el.classList.toggle('open'); }
 
 function updateProgress() {
-  const total = todos.length;
-  const done = todos.filter(function(t) { return t.done; }).length;
-  const pct = total ? Math.round(done / total * 100) : 0;
+  var total = todos.length;
+  var done = todos.filter(function(t) { return t.done; }).length;
+  var pct = total ? Math.round(done / total * 100) : 0;
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('progress-text').textContent = done + ' / ' + total + ' 項完成';
 }
 
 function buildCard(item, color) {
-  const card = document.createElement('div');
+  var card = document.createElement('div');
   card.className = 'todo-card' + (item.done ? ' done' : '');
 
-  const header = document.createElement('div');
+  var header = document.createElement('div');
   header.className = 'todo-header';
   header.onclick = function() { card.classList.toggle('open'); };
 
-  const dot = document.createElement('div');
+  var dot = document.createElement('div');
   dot.className = 'dot';
   dot.style.background = color;
 
-  const titleEl = document.createElement('div');
+  var titleEl = document.createElement('div');
   titleEl.className = 'todo-title';
   titleEl.textContent = item.title;
 
-  const chev = document.createElement('div');
-  chev.className = 'chevron';
-  chev.textContent = '▼';
-
   header.appendChild(dot);
   header.appendChild(titleEl);
+
+  if (item.url) {
+    var link = document.createElement('a');
+    link.className = 'open-link-btn';
+    link.href = item.url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.style.background = color + '18';
+    link.style.color = color;
+    link.textContent = '開啟 ↗';
+    link.onclick = function(e) { e.stopPropagation(); };
+    header.appendChild(link);
+  }
+
+  var chev = document.createElement('div');
+  chev.className = 'chevron';
+  chev.textContent = '▼';
   header.appendChild(chev);
 
-  const ctx = document.createElement('div');
+  var ctx = document.createElement('div');
   ctx.className = 'todo-context';
 
-  const tag = document.createElement('div');
+  var tag = document.createElement('div');
   tag.className = 'session-tag';
   tag.style.background = color + '18';
   tag.style.color = color;
   tag.textContent = item.session_name || '';
 
-  const body = document.createElement('p');
-  body.innerHTML = (item.context || '').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+  var bodyP = document.createElement('p');
+  bodyP.innerHTML = (item.context || '').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
 
-  const btn = document.createElement('button');
+  var btn = document.createElement('button');
   btn.className = 'done-btn';
   btn.textContent = item.done ? '↩ 取消完成' : '✓ 標為完成';
   btn.onclick = function(e) {
@@ -167,9 +182,8 @@ function buildCard(item, color) {
   };
 
   ctx.appendChild(tag);
-  ctx.appendChild(body);
+  ctx.appendChild(bodyP);
   ctx.appendChild(btn);
-
   card.appendChild(header);
   card.appendChild(ctx);
   return card;
@@ -177,32 +191,32 @@ function buildCard(item, color) {
 
 function render() {
   updateProgress();
-  const container = document.getElementById('todo-list');
+  var container = document.getElementById('todo-list');
   container.innerHTML = '';
 
-  const groups = {};
-  const projectColors = {};
+  var groups = {};
+  var projectColors = {};
   todos.forEach(function(t) {
     if (!groups[t.project]) { groups[t.project] = []; projectColors[t.project] = t.color; }
     groups[t.project].push(t);
   });
 
-  let anyVisible = false;
+  var anyVisible = false;
   Object.keys(groups).forEach(function(project) {
-    const items = groups[project];
-    const visible = showDone ? items : items.filter(function(t) { return !t.done; });
+    var items = groups[project];
+    var color = projectColors[project];
+    var visible = showDone ? items : items.filter(function(t) { return !t.done; });
     if (!visible.length) return;
     anyVisible = true;
-    const color = projectColors[project];
 
-    const groupEl = document.createElement('div');
+    var groupEl = document.createElement('div');
     groupEl.className = 'project-group';
 
-    const label = document.createElement('div');
-    label.className = 'project-label';
-    label.style.color = color;
-    label.textContent = project;
-    groupEl.appendChild(label);
+    var lbl = document.createElement('div');
+    lbl.className = 'project-label';
+    lbl.style.color = color;
+    lbl.textContent = project;
+    groupEl.appendChild(lbl);
 
     visible.forEach(function(item) {
       groupEl.appendChild(buildCard(item, color));
