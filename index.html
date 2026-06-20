@@ -82,8 +82,28 @@ async function loadTodos() {
   try {
     const res = await fetch(SB_URL + '/rest/v1/todos?select=*&order=project,sort_order', { headers: HEADERS });
     if (!res.ok) throw new Error();
-    todos = await res.json();
-    setSyncStatus('ok', '已同步 · ' + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}));
+    const all = await res.json();
+
+    // 找 __sync__ 紀錄取得上次同步時間，其餘才是真正的 todos
+    const syncRow = all.find(t => t.id === '__sync__');
+    todos = all.filter(t => t.id !== '__sync__');
+
+    if (syncRow && syncRow.updated_at) {
+      const syncTime = new Date(syncRow.updated_at);
+      const now = new Date();
+      const diffMin = Math.round((now - syncTime) / 60000);
+      let label;
+      if (diffMin < 1) label = '剛剛同步';
+      else if (diffMin < 60) label = diffMin + ' 分鐘前同步';
+      else {
+        const h = syncTime.getHours().toString().padStart(2,'0');
+        const m = syncTime.getMinutes().toString().padStart(2,'0');
+        label = '上次同步 ' + h + ':' + m;
+      }
+      setSyncStatus('ok', label);
+    } else {
+      setSyncStatus('ok', '已載入（尚無同步紀錄）');
+    }
     render();
   } catch(e) {
     setSyncStatus('error', '載入失敗');
