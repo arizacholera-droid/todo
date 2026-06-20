@@ -37,6 +37,15 @@
   .done-btn { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #78716c; background: #f5f5f4; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: background 0.15s; }
   .done-btn:hover { background: #e7e5e4; color: #1c1917; }
   .done-btn:disabled { opacity: 0.5; cursor: default; }
+  .notes-wrap { margin-top: 12px; border-top: 1px solid #f0efee; padding-top: 10px; }
+  .notes-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #a8a29e; margin-bottom: 5px; }
+  .notes-ta { width: 100%; font-size: 12px; font-family: inherit; color: #1c1917; background: #fafaf9; border: 1px solid #e7e5e4; border-radius: 6px; padding: 7px 10px; resize: vertical; min-height: 56px; outline: none; transition: border-color 0.15s; box-sizing: border-box; }
+  .notes-ta:focus { border-color: #a8a29e; }
+  .notes-save { margin-top: 5px; font-size: 11px; font-weight: 500; color: #fff; background: #292524; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: opacity 0.15s; }
+  .notes-save:hover { opacity: 0.8; }
+  .notes-save:disabled { opacity: 0.4; cursor: default; }
+  .notes-saved { font-size: 11px; color: #22c55e; margin-left: 6px; opacity: 0; transition: opacity 0.3s; }
+  .notes-saved.show { opacity: 1; }
   .todo-card.done { opacity: 0.45; }
   .todo-card.done .todo-title { text-decoration: line-through; color: #a8a29e; }
   .toggle-done-btn { font-size: 12px; color: #a8a29e; background: none; border: none; cursor: pointer; padding: 8px 0; display: block; margin: 4px auto 0; }
@@ -83,11 +92,8 @@ async function loadTodos() {
     const res = await fetch(SB_URL + '/rest/v1/todos?select=*&order=project,sort_order', { headers: HEADERS });
     if (!res.ok) throw new Error();
     const all = await res.json();
-
-    // 找 __sync__ 紀錄取得上次同步時間，其餘才是真正的 todos
     const syncRow = all.find(t => t.id === '__sync__');
     todos = all.filter(t => t.id !== '__sync__');
-
     if (syncRow && syncRow.updated_at) {
       const syncTime = new Date(syncRow.updated_at);
       const now = new Date();
@@ -127,13 +133,29 @@ async function toggleDone(id, isDone) {
   }
 }
 
+async function saveNotes(id, notes, btn, savedMsg) {
+  try {
+    await fetch(SB_URL + '/rest/v1/todos', {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify({ id: id, notes: notes, updated_at: new Date().toISOString() })
+    });
+    var t = todos.find(function(t) { return t.id === id; });
+    if (t) t.notes = notes;
+    savedMsg.classList.add('show');
+    setTimeout(function() { savedMsg.classList.remove('show'); }, 2000);
+  } catch(e) {
+    savedMsg.textContent = '✗ 儲存失敗';
+    savedMsg.classList.add('show');
+  }
+  btn.disabled = false;
+}
+
 function toggleShowDone() {
   showDone = !showDone;
   document.getElementById('toggle-done-btn').textContent = showDone ? '隱藏已完成項目' : '顯示已完成項目';
   render();
 }
-
-function toggleCard(el) { el.classList.toggle('open'); }
 
 function updateProgress() {
   var total = todos.length;
@@ -146,22 +168,17 @@ function updateProgress() {
 function buildCard(item, color) {
   var card = document.createElement('div');
   card.className = 'todo-card' + (item.done ? ' done' : '');
-
   var header = document.createElement('div');
   header.className = 'todo-header';
   header.onclick = function() { card.classList.toggle('open'); };
-
   var dot = document.createElement('div');
   dot.className = 'dot';
   dot.style.background = color;
-
   var titleEl = document.createElement('div');
   titleEl.className = 'todo-title';
   titleEl.textContent = item.title;
-
   header.appendChild(dot);
   header.appendChild(titleEl);
-
   if (item.url) {
     var link = document.createElement('a');
     link.className = 'open-link-btn';
@@ -174,24 +191,19 @@ function buildCard(item, color) {
     link.onclick = function(e) { e.stopPropagation(); };
     header.appendChild(link);
   }
-
   var chev = document.createElement('div');
   chev.className = 'chevron';
   chev.textContent = '▼';
   header.appendChild(chev);
-
   var ctx = document.createElement('div');
   ctx.className = 'todo-context';
-
   var tag = document.createElement('div');
   tag.className = 'session-tag';
   tag.style.background = color + '18';
   tag.style.color = color;
   tag.textContent = item.session_name || '';
-
   var bodyP = document.createElement('p');
   bodyP.innerHTML = (item.context || '').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-
   var btn = document.createElement('button');
   btn.className = 'done-btn';
   btn.textContent = item.done ? '↩ 取消完成' : '✓ 標為完成';
@@ -200,10 +212,39 @@ function buildCard(item, color) {
     btn.disabled = true;
     toggleDone(item.id, !item.done);
   };
-
+  var notesWrap = document.createElement('div');
+  notesWrap.className = 'notes-wrap';
+  var notesLabel = document.createElement('div');
+  notesLabel.className = 'notes-label';
+  notesLabel.textContent = '📝 手機備忘';
+  var notesTa = document.createElement('textarea');
+  notesTa.className = 'notes-ta';
+  notesTa.placeholder = '在手機上記錄處理結果或下一步提示…';
+  notesTa.value = item.notes || '';
+  notesTa.onclick = function(e) { e.stopPropagation(); };
+  var notesRow = document.createElement('div');
+  notesRow.style.display = 'flex';
+  notesRow.style.alignItems = 'center';
+  var saveBtn = document.createElement('button');
+  saveBtn.className = 'notes-save';
+  saveBtn.textContent = '儲存備忘';
+  var savedMsg = document.createElement('span');
+  savedMsg.className = 'notes-saved';
+  savedMsg.textContent = '✓ 已儲存';
+  saveBtn.onclick = function(e) {
+    e.stopPropagation();
+    saveBtn.disabled = true;
+    saveNotes(item.id, notesTa.value, saveBtn, savedMsg);
+  };
+  notesRow.appendChild(saveBtn);
+  notesRow.appendChild(savedMsg);
+  notesWrap.appendChild(notesLabel);
+  notesWrap.appendChild(notesTa);
+  notesWrap.appendChild(notesRow);
   ctx.appendChild(tag);
   ctx.appendChild(bodyP);
   ctx.appendChild(btn);
+  ctx.appendChild(notesWrap);
   card.appendChild(header);
   card.appendChild(ctx);
   return card;
@@ -213,14 +254,12 @@ function render() {
   updateProgress();
   var container = document.getElementById('todo-list');
   container.innerHTML = '';
-
   var groups = {};
   var projectColors = {};
   todos.forEach(function(t) {
     if (!groups[t.project]) { groups[t.project] = []; projectColors[t.project] = t.color; }
     groups[t.project].push(t);
   });
-
   var anyVisible = false;
   Object.keys(groups).forEach(function(project) {
     var items = groups[project];
@@ -228,22 +267,18 @@ function render() {
     var visible = showDone ? items : items.filter(function(t) { return !t.done; });
     if (!visible.length) return;
     anyVisible = true;
-
     var groupEl = document.createElement('div');
     groupEl.className = 'project-group';
-
     var lbl = document.createElement('div');
     lbl.className = 'project-label';
     lbl.style.color = color;
     lbl.textContent = project;
     groupEl.appendChild(lbl);
-
     visible.forEach(function(item) {
       groupEl.appendChild(buildCard(item, color));
     });
     container.appendChild(groupEl);
   });
-
   if (!anyVisible) {
     container.innerHTML = '<div class="empty">🎉 所有項目都完成了！</div>';
   }
