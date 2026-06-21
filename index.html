@@ -52,9 +52,7 @@
   .refresh-btn { font-size: 11px; font-weight: 500; color: #78716c; background: #f5f5f4; border: 1px solid #e7e5e4; border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
   .refresh-btn:hover { background: #e7e5e4; color: #292524; }
   .refresh-btn:disabled { opacity: 0.5; cursor: default; }
-  .loc-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 99px; border: none; cursor: pointer; flex-shrink: 0; background: #f5f5f4; color: #78716c; transition: background 0.15s, color 0.15s; user-select: none; }
-  .loc-tag:hover { background: #e7e5e4; color: #292524; }
-  .loc-tag.set { background: #292524; color: #fff; }
+  .loc-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 99px; border: none; flex-shrink: 0; background: #292524; color: #fff; user-select: none; }
   .todo-card.done { opacity: 0.45; }
   .todo-card.done .todo-title { text-decoration: line-through; color: #a8a29e; }
   .toggle-done-btn { font-size: 12px; color: #a8a29e; background: none; border: none; cursor: pointer; padding: 8px 0; display: block; margin: 4px auto 0; }
@@ -103,7 +101,6 @@ async function loadTodos() {
     if (!res.ok) throw new Error();
     const all = await res.json();
 
-    // 找 __sync__ 紀錄取得上次同步時間，其餘才是真正的 todos
     const syncRow = all.find(t => t.id === '__sync__');
     todos = all.filter(t => t.id !== '__sync__');
 
@@ -156,23 +153,9 @@ async function manualRefresh() {
   btn.textContent = '現在更新';
 }
 
-const LOC_OPTIONS = ['', 'Cowork', '電話', '訊息', '影印機', '外出'];
-const LOC_ICONS  = ['', '💻', '📞', '💬', '🖨️', '🚶'];
-
-async function cycleLocation(id, currentLoc, tagEl) {
-  const idx = LOC_OPTIONS.indexOf(currentLoc);
-  const next = LOC_OPTIONS[(idx + 1) % LOC_OPTIONS.length];
-  tagEl.textContent = next ? LOC_ICONS[LOC_OPTIONS.indexOf(next)] + ' ' + next : '+ 類型';
-  tagEl.className = 'loc-tag' + (next ? ' set' : '');
-  var t = todos.find(function(t) { return t.id === id; });
-  if (t) t.location = next;
-  try {
-    await fetch(SB_URL + '/rest/v1/todos', {
-      method: 'POST',
-      headers: HEADERS,
-      body: JSON.stringify({ id: id, location: next, updated_at: new Date().toISOString() })
-    });
-  } catch(e) {}
+function getLocDisplay(loc) {
+  var icons = { 'Cowork':'💻', 'Terminal':'⌨️', '手機':'📱', 'Notion':'📝', 'Instagram':'📸', 'GitHub Desktop':'🐙', 'Dropbox':'📦', '電話':'📞' };
+  return (icons[loc] || '●') + ' ' + loc;
 }
 
 async function saveNotes(id, notes, btn, savedMsg) {
@@ -195,7 +178,7 @@ async function saveNotes(id, notes, btn, savedMsg) {
 
 function toggleShowDone() {
   showDone = !showDone;
-  document.getElementById('toggle-done-btn').textContent = showDone ? '隱藏已完成項目' : '顯示已完成項目';
+  document.getElementById('toggle-done-btn').textContent = showDone ? '隱藏已完成項目' tElementById('toggle-done-btn').textContent = showDone ? '隱藏已完成項目' : '顯示已完成項目';
   render();
 }
 
@@ -239,17 +222,11 @@ function buildCard(item, color) {
     link.textContent = '開啟 ↗';
     link.onclick = function(e) { e.stopPropagation(); };
     header.appendChild(link);
-  } else {
-    var locTag = document.createElement('button');
-    var locVal = item.location || '';
-    var locIdx = LOC_OPTIONS.indexOf(locVal);
-    locTag.className = 'loc-tag' + (locVal ? ' set' : '');
-    locTag.textContent = locVal ? (LOC_ICONS[locIdx] + ' ' + locVal) : '+ 類型';
-    locTag.onclick = function(e) {
-      e.stopPropagation();
-      cycleLocation(item.id, item.location || '', locTag);
-    };
-    header.appendChild(locTag);
+  } else if (item.location) {
+    var locBadge = document.createElement('div');
+    locBadge.className = 'loc-tag';
+    locBadge.textContent = getLocDisplay(item.location);
+    header.appendChild(locBadge);
   }
 
   var chev = document.createElement('div');
