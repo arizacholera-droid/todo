@@ -31,10 +31,17 @@
   .meta-link:hover { text-decoration: underline; }
   .meta-loc { color: #78716c; }
   .notes-wrap { margin-top: 8px; background: #fafaf9; border-left: 3px solid #e7e5e4; padding: 6px 10px; font-size: 12px; color: #57534e; border-radius: 0 4px 4px 0; }
+  .notes-editor { margin-top: 10px; display: none; }
+  .notes-editor.open { display: block; }
+  .notes-editor textarea { width: 100%; border: 1px solid #e7e5e4; border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: inherit; color: #1c1917; background: #fafaf9; resize: vertical; min-height: 72px; outline: none; transition: border-color 0.15s; }
+  .notes-editor textarea:focus { border-color: #a8a29e; }
+  .notes-save-row { display: flex; gap: 8px; margin-top: 6px; }
   .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-  .done-btn, .bottom-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #78716c; background: #f5f5f4; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: background 0.15s, color 0.15s; }
-  .done-btn:hover, .bottom-btn:hover { background: #e7e5e4; color: #1c1917; }
-  .done-btn:disabled, .bottom-btn:disabled { opacity: 0.5; cursor: default; }
+  .done-btn, .bottom-btn, .notes-btn, .save-btn, .cancel-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; color: #78716c; background: #f5f5f4; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .done-btn:hover, .bottom-btn:hover, .notes-btn:hover, .cancel-btn:hover { background: #e7e5e4; color: #1c1917; }
+  .save-btn { background: #1c1917; color: #fff; }
+  .save-btn:hover { background: #292524; }
+  .done-btn:disabled, .bottom-btn:disabled, .notes-btn:disabled, .save-btn:disabled { opacity: 0.5; cursor: default; }
   .todo-card.done { opacity: 0.45; }
   .todo-card.done .todo-title { text-decoration: line-through; color: #a8a29e; }
   .progress-bar-wrap { background: #e7e5e4; border-radius: 99px; height: 4px; margin-bottom: 20px; overflow: hidden; }
@@ -56,7 +63,7 @@
 const SUPABASE_URL='https://hwlbadvxnsppojaoqkeh.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGJhZHZ4bnNwcG9qYW9xa2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzgyOTgsImV4cCI6MjA5NzQ1NDI5OH0.iG4Z0YYn7aP_UGTZnx-hYBOrxjTS0NsHi0SaYAraiy0';
 const HEADERS={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'};
-const COLOR_MAP={'herlilbf 包養平台':'#db2777','自建包養網':'#db2777','付費電子報':'#2563eb','緬山的森林':'#16a34a','中文出版計劃':'#16a34a','系統整理':'#d97706','野果網站':'#7c3aed','文學創作':'#0891b2','戲劇配樂':'#b45309','Cowork Todo List':'#78716c'};
+const COLOR_MAP={'herlilbf 包養平台':'#db2777','自建包養網':'#db2777','付費電子報':'#2563eb','緬因的森林':'#16a34a','中文出版計劃':'#16a34a','系統整理':'#d97706','野果網站':'#7c3aed','文學創作':'#0891b2','戲劇配樂':'#b45309','Cowork Todo List':'#78716c'};
 const EXTRA=['#059669','#dc2626','#9333ea','#0284c7'];
 let colorIdx=0;const ac={};
 function getColor(p){return COLOR_MAP[p]||(ac[p]=ac[p]||EXTRA[colorIdx++%EXTRA.length]);}
@@ -99,6 +106,24 @@ async function moveToBottom(id,project,btnEl){
     renderAll();updateProgress();
   }catch(e){alert('更新失敗：'+e.message);btnEl.disabled=false;}
 }
+function toggleNotesEditor(id){
+  const editor=document.getElementById('notes-editor-'+id);
+  if(!editor)return;
+  const isOpen=editor.classList.toggle('open');
+  if(isOpen)editor.querySelector('textarea').focus();
+}
+async function saveNotes(id,btnEl){
+  const textarea=document.getElementById('notes-textarea-'+id);
+  if(!textarea)return;
+  btnEl.disabled=true;
+  try{
+    const notes=textarea.value;
+    const res=await fetch(SUPABASE_URL+'/rest/v1/todos',{method:'POST',headers:HEADERS,body:JSON.stringify({id,notes})});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const t=allTodos.find(x=>x.id===id);if(t)t.notes=notes;
+    renderAll();
+  }catch(e){alert('儲存失敗：'+e.message);btnEl.disabled=false;}
+}
 function toggleCard(el){el.classList.toggle('open');}
 function toggleDone(){showDone=!showDone;document.getElementById('toggle-done-btn').textContent=showDone?'隱藏已完成項目':'顯示已完成項目';renderAll();}
 function updateProgress(){
@@ -137,10 +162,19 @@ function renderAll(){
           '<div class="btn-row">'+
             '<button class="done-btn" data-id="'+item.id+'" data-done="'+(item.done?'1':'0')+'">'+(item.done?'↩ 取消完成':'✓ 標為完成')+'</button>'+
             '<button class="bottom-btn" data-id="'+item.id+'" data-project="'+item.project+'">↓ 移到最下方</button>'+
+            '<button class="notes-btn" onclick="event.stopPropagation();toggleNotesEditor(''+item.id+'')">✏️ 備注</button>'+
+          '</div>'+
+          '<div class="notes-editor" id="notes-editor-'+item.id+'">'+
+            '<textarea id="notes-textarea-'+item.id+'" placeholder="輸入備注…">'+((item.notes||'').replace(/</g,'&lt;'))+'</textarea>'+
+            '<div class="notes-save-row">'+
+              '<button class="save-btn" data-id="'+item.id+'">儲存</button>'+
+              '<button class="cancel-btn" onclick="event.stopPropagation();toggleNotesEditor(''+item.id+'')">取消</button>'+
+            '</div>'+
           '</div>'+
         '</div>';
       card.querySelector('.done-btn').addEventListener('click',function(e){e.stopPropagation();markDone(this.dataset.id,this.dataset.done==='1',this);});
       card.querySelector('.bottom-btn').addEventListener('click',function(e){e.stopPropagation();moveToBottom(this.dataset.id,this.dataset.project,this);});
+      card.querySelector('.save-btn').addEventListener('click',function(e){e.stopPropagation();saveNotes(this.dataset.id,this);});
       groupEl.appendChild(card);
     });
     container.appendChild(groupEl);
