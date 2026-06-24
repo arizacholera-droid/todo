@@ -9,7 +9,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f4; color: #1c1917; padding: 24px 16px; min-height: 100vh; }
   h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-  .subtitle { font-size: 12px; color: #78716c; margin-bottom: 20px; }
+  .subtitle { font-size: 12px; color: #78716c; margin-bottom: 12px; }
   .loading { text-align: center; padding: 40px 0; color: #a8a29e; font-size: 13px; }
   .error-msg { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; color: #dc2626; font-size: 13px; margin-bottom: 16px; }
   .project-group { margin-bottom: 20px; }
@@ -19,6 +19,7 @@
   .todo-header { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; user-select: none; }
   .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .todo-title { font-size: 14px; font-weight: 500; flex: 1; line-height: 1.4; }
+  .priority-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 99px; flex-shrink: 0; }
   .chevron { font-size: 12px; color: #a8a29e; transition: transform 0.2s; flex-shrink: 0; }
   .todo-card.open .chevron { transform: rotate(180deg); }
   .todo-context { display: none; padding: 12px 16px 14px 38px; font-size: 13px; color: #57534e; line-height: 1.6; border-top: 1px solid #f5f5f4; }
@@ -31,17 +32,13 @@
   .meta-link:hover { text-decoration: underline; }
   .meta-loc { color: #78716c; }
   .notes-wrap { margin-top: 8px; background: #fafaf9; border-left: 3px solid #e7e5e4; padding: 6px 10px; font-size: 12px; color: #57534e; border-radius: 0 4px 4px 0; }
-  .notes-editor { margin-top: 10px; display: none; }
-  .notes-editor.open { display: block; }
-  .notes-editor textarea { width: 100%; border: 1px solid #e7e5e4; border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: inherit; color: #1c1917; background: #fafaf9; resize: vertical; min-height: 72px; outline: none; transition: border-color 0.15s; }
-  .notes-editor textarea:focus { border-color: #a8a29e; }
-  .notes-save-row { display: flex; gap: 8px; margin-top: 6px; }
-  .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-  .done-btn, .bottom-btn, .notes-btn, .save-btn, .cancel-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; color: #78716c; background: #f5f5f4; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: background 0.15s, color 0.15s; }
-  .done-btn:hover, .bottom-btn:hover, .notes-btn:hover, .cancel-btn:hover { background: #e7e5e4; color: #1c1917; }
-  .save-btn { background: #1c1917; color: #fff; }
-  .save-btn:hover { background: #292524; }
-  .done-btn:disabled, .bottom-btn:disabled, .notes-btn:disabled, .save-btn:disabled { opacity: 0.5; cursor: default; }
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  .done-btn, .bottom-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #78716c; background: #f5f5f4; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .done-btn:hover, .bottom-btn:hover { background: #e7e5e4; color: #1c1917; }
+  .done-btn:disabled, .bottom-btn:disabled { opacity: 0.5; cursor: default; }
+  .priority-wrap { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #78716c; margin-left: auto; }
+  .priority-wrap label { font-size: 11px; }
+  .priority-select { font-size: 12px; padding: 3px 6px; border: 1px solid #e7e5e4; border-radius: 6px; background: #fff; color: #1c1917; cursor: pointer; }
   .todo-card.done { opacity: 0.45; }
   .todo-card.done .todo-title { text-decoration: line-through; color: #a8a29e; }
   .progress-bar-wrap { background: #e7e5e4; border-radius: 99px; height: 4px; margin-bottom: 20px; overflow: hidden; }
@@ -49,6 +46,12 @@
   .progress-label { font-size: 11px; color: #78716c; margin-bottom: 6px; }
   .show-done-btn { font-size: 12px; color: #a8a29e; background: none; border: none; cursor: pointer; padding: 8px 0; display: block; margin: 0 auto; }
   .show-done-btn:hover { color: #78716c; }
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 16px; padding: 10px 14px; background: #fff; border: 1px solid #e7e5e4; border-radius: 10px; }
+  .filter-label { font-size: 11px; font-weight: 600; color: #a8a29e; text-transform: uppercase; letter-spacing: 0.06em; }
+  .filter-sep { width: 1px; height: 16px; background: #e7e5e4; margin: 0 4px; }
+  .f-btn { font-size: 11px; font-weight: 500; padding: 4px 10px; border: 1px solid #e7e5e4; border-radius: 99px; background: #fff; color: #57534e; cursor: pointer; transition: all 0.1s; }
+  .f-btn:hover { background: #f5f5f4; }
+  .f-btn.active { background: #1c1917; color: #fff; border-color: #1c1917; }
 </style>
 </head>
 <body>
@@ -56,131 +59,42 @@
 <p class="subtitle" id="subtitle">載入中…</p>
 <div class="progress-label" id="progress-text"></div>
 <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+<div class="filter-bar" id="filter-bar" style="display:none">
+  <span class="filter-label">排序</span>
+  <button class="f-btn active" data-sort="none">原順序</button>
+  <button class="f-btn" data-sort="desc">重要性 高→低</button>
+  <button class="f-btn" data-sort="asc">重要性 低→高</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">顯示</span>
+  <button class="f-btn active" data-min="0">全部</button>
+  <button class="f-btn" data-min="2">中以上</button>
+  <button class="f-btn" data-min="3">高</button>
+</div>
 <div id="error-area"></div>
 <div id="todo-list"><div class="loading">正在從 Supabase 讀取資料…</div></div>
-<button class="show-done-btn" id="toggle-done-btn" onclick="toggleDone()" style="display:none">顯示已完成項目</button>
+<button class="show-done-btn" id="toggle-done-btn" style="display:none">顯示已完成項目</button>
 <script>
-const SB="https://hwlbadvxnsppojaoqkeh.supabase.co";
-const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGJhZHZ4bnNwcG9qYW9xa2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzgyOTgsImV4cCI6MjA5NzQ1NDI5OH0.iG4Z0YYn7aP_UGTZnx-hYBOrxjTS0NsHi0SaYAraiy0";
-const H={"apikey":SK,"Authorization":"Bearer "+SK,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"};
-const CM={"herlilbf 包養平台":"#db2777","自建包養網":"#db2777","付費電子報":"#2563eb","緬因的森林":"#16a34a","中文出版計劃":"#16a34a","系統整理":"#d97706","野果網站":"#7c3aed","文學創作":"#0891b2","戟劇配樂":"#b45309","Cowork Todo List":"#78716c"};
-const EX=["#059669","#dc2626","#9333ea","#0284c7"];
-let ci=0;const ac={};
-function gc(p){return CM[p]||(ac[p]=ac[p]||EX[ci++%EX.length]);}
-let allTodos=[],showDone=false;
-async function loadData(){
-  try{
-    const r=await fetch(SB+"/rest/v1/todos?select=*&order=project,sort_order",{headers:{"apikey":SK,"Authorization":"Bearer "+SK}});
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    const d=await r.json();
-    const s=d.find(t=>t.id==="__sync__");
-    if(s&&s.updated_at){const dt=new Date(s.updated_at);document.getElementById("subtitle").textContent="上次同步："+dt.toLocaleDateString("zh-TW",{month:"long",day:"numeric"})+" "+dt.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"});}
-    else document.getElementById("subtitle").textContent="已載入";
-    allTodos=d.filter(t=>t.id!=="__sync__"&&t.title);
-    renderAll();updateProgress();
-    document.getElementById("toggle-done-btn").style.display="block";
-  }catch(e){
-    document.getElementById("subtitle").textContent="載入失敗";
-    document.getElementById("error-area").innerHTML="<div class=\"error-msg\">無法連接 Supabase："+e.message+"</div>";
-    document.getElementById("todo-list").innerHTML="";
-  }
-}
-async function markDone(id,isDone,btn){
-  btn.disabled=true;
-  try{
-    const r=await fetch(SB+"/rest/v1/todos",{method:"POST",headers:H,body:JSON.stringify({id,done:!isDone})});
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    const t=allTodos.find(x=>x.id===id);if(t)t.done=!isDone;
-    renderAll();updateProgress();
-  }catch(e){alert("更新失敗："+e.message);btn.disabled=false;}
-}
-async function moveToBottom(id,project,btn){
-  btn.disabled=true;
-  try{
-    const mx=Math.max(0,...allTodos.filter(t=>t.project===project&&!t.done).map(t=>t.sort_order||0));
-    const r=await fetch(SB+"/rest/v1/todos",{method:"POST",headers:H,body:JSON.stringify({id,sort_order:mx+1})});
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    const t=allTodos.find(x=>x.id===id);if(t)t.sort_order=mx+1;
-    allTodos.sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-    renderAll();updateProgress();
-  }catch(e){alert("更新失敗："+e.message);btn.disabled=false;}
-}
-function toggleNotes(id){
-  const el=document.getElementById("ne-"+id);
-  if(el)el.classList.toggle("open");
-}
-async function saveNotes(id,btn){
-  const ta=document.getElementById("nt-"+id);
-  if(!ta)return;
-  btn.disabled=true;
-  try{
-    const notes=ta.value;
-    const r=await fetch(SB+"/rest/v1/todos",{method:"POST",headers:H,body:JSON.stringify({id,notes})});
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    const t=allTodos.find(x=>x.id===id);if(t)t.notes=notes;
-    renderAll();
-  }catch(e){alert("儲存失敗："+e.message);btn.disabled=false;}
-}
-function toggleCard(el){el.classList.toggle("open");}
+const SUPABASE_URL="https://hwlbadvxnsppojaoqkeh.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGJhZHZ4bnNwcG9qYW9xa2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzgyOTgsImV4cCI6MjA5NzQ1NDI5OH0.iG4Z0YYn7aP_UGTZnx-hYBOrxjTS0NsHi0SaYAraiy0";
+const HEADERS={"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"};
+const COLOR_MAP={"herlilbf 包養平台":"#db2777","自建包養網":"#db2777","付費電子報":"#2563eb","緬因的森林":"#16a34a","中文出版計劃":"#16a34a","系統整理":"#d97706","野果網站":"#7c3aed","文學創作":"#0891b2","戲劇配樂":"#b45309","Cowork Todo List":"#78716c"};
+const EXTRA=["#059669","#dc2626","#9333ea","#0284c7"];
+let colorIdx=0;const ac={};
+function getColor(p){return COLOR_MAP[p]||(ac[p]=ac[p]||EXTRA[colorIdx++%EXTRA.length]);}
+const PRIORITY_LABELS=["—","低","中","高"];
+const PRIORITY_BG=["#e7e5e4","#dbeafe","#fef3c7","#fee2e2"];
+const PRIORITY_FG=["#a8a29e","#1d4ed8","#b45309","#dc2626"];
+let allTodos=[],showDone=false,sortMode="none",minPriority=0;
+document.querySelectorAll("[data-sort]").forEach(function(btn){btn.addEventListener("click",function(){sortMode=this.dataset.sort;document.querySelectorAll("[data-sort]").forEach(function(b){b.classList.remove("active");});this.classList.add("active");renderAll();});});
+document.querySelectorAll("[data-min]").forEach(function(btn){btn.addEventListener("click",function(){minPriority=parseInt(this.dataset.min);document.querySelectorAll("[data-min]").forEach(function(b){b.classList.remove("active");});this.classList.add("active");renderAll();});});
+async function loadData(){try{const res=await fetch(SUPABASE_URL+"/rest/v1/todos?select=*&order=project,sort_order",{headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY}});if(!res.ok)throw new Error("HTTP "+res.status);const data=await res.json();const syncRow=data.find(function(t){return t.id==="__sync__";});if(syncRow&&syncRow.updated_at){const d=new Date(syncRow.updated_at);document.getElementById("subtitle").textContent="上次同步："+d.toLocaleDateString("zh-TW",{month:"long",day:"numeric"})+" "+d.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"});}else{document.getElementById("subtitle").textContent="已載入";}allTodos=data.filter(function(t){return t.id!=="__sync__"&&t.title;});renderAll();updateProgress();document.getElementById("toggle-done-btn").style.display="block";document.getElementById("filter-bar").style.display="flex";}catch(e){document.getElementById("subtitle").textContent="載入失敗";document.getElementById("error-area").innerHTML="<div class=\"error-msg\">無法連接 Supabase："+e.message+"</div>";document.getElementById("todo-list").innerHTML="";}}
+async function markDone(id,isDone,btnEl){btnEl.disabled=true;try{const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:HEADERS,body:JSON.stringify({id:id,done:!isDone})});if(!res.ok)throw new Error("HTTP "+res.status);const t=allTodos.find(function(x){return x.id===id;});if(t)t.done=!isDone;renderAll();updateProgress();}catch(e){alert("更新失敗："+e.message);btnEl.disabled=false;}}
+async function moveToBottom(id,project,btnEl){btnEl.disabled=true;try{const sp=allTodos.filter(function(t){return t.project===project&&!t.done;});const mx=Math.max.apply(null,[0].concat(sp.map(function(t){return t.sort_order||0;})));const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:HEADERS,body:JSON.stringify({id:id,sort_order:mx+1})});if(!res.ok)throw new Error("HTTP "+res.status);const t=allTodos.find(function(x){return x.id===id;});if(t)t.sort_order=mx+1;allTodos.sort(function(a,b){return(a.sort_order||0)-(b.sort_order||0);});renderAll();updateProgress();}catch(e){alert("更新失敗："+e.message);btnEl.disabled=false;}}
+async function setPriority(id,value,selectEl){selectEl.disabled=true;try{const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:HEADERS,body:JSON.stringify({id:id,priority:value})});if(!res.ok)throw new Error("HTTP "+res.status);const t=allTodos.find(function(x){return x.id===id;});if(t)t.priority=value;renderAll();updateProgress();}catch(e){alert("更新失敗："+e.message);}selectEl.disabled=false;}
 function toggleDone(){showDone=!showDone;document.getElementById("toggle-done-btn").textContent=showDone?"隱藏已完成項目":"顯示已完成項目";renderAll();}
-function updateProgress(){
-  const total=allTodos.length,done=allTodos.filter(t=>t.done).length;
-  const pct=total?Math.round(done/total*100):0;
-  document.getElementById("progress-fill").style.width=pct+"%";
-  document.getElementById("progress-text").textContent=done+" / "+total+" 項完成";
-}
-function renderAll(){
-  const c=document.getElementById("todo-list");c.innerHTML="";
-  const vis=showDone?allTodos:allTodos.filter(t=>!t.done);
-  if(!vis.length){c.innerHTML="<div class=\"loading\">所有項目已完成 🎉</div>";return;}
-  const groups={};
-  vis.forEach(t=>{const p=t.project||"(未分類)";(groups[p]=groups[p]||[]).push(t);});
-  Object.entries(groups).forEach(([project,items])=>{
-    const color=gc(project);
-    const g=document.createElement("div");g.className="project-group";
-    const lbl=document.createElement("div");lbl.className="project-label";lbl.style.color=color;lbl.textContent=project;g.appendChild(lbl);
-    items.forEach(item=>{
-      const card=document.createElement("div");card.className="todo-card"+(item.done?" done":"");
-      const mp=[];
-      if(item.url)mp.push("<a class=\"meta-link\" href=\""+item.url+"\" target=\"_blank\">\ud83d\udd17 "+item.url.replace(/^https?:\/\//,"").split("/")[0]+"</a>");
-      if(item.location)mp.push("<span class=\"meta-loc\">📍 "+item.location+"</span>");
-      const ctx=item.context?"<div class=\"context-text\"><p>"+item.context.split("\n\n").join("</p><p>").split("\n").join("<br>")+"</p></div>":"";
-      const nw=item.notes?"<div class=\"notes-wrap\">📝 "+item.notes+"</div>":"";
-      const mh=mp.length?"<div class=\"meta-row\">"+mp.join("")+"</div>":"";
-      const eid="ne-"+item.id;
-      const tid="nt-"+item.id;
-      card.innerHTML=
-        "<div class=\"todo-header\" onclick=\"toggleCard(this.parentElement)\">"+
-          "<div class=\"dot\" style=\"background:"+color+"\"></div>"+
-          "<div class=\"todo-title\">"+item.title+"</div>"+
-          "<div class=\"chevron\">▼</div>"+
-        "</div>"+
-        "<div class=\"todo-context\">"+
-          (item.session_name?"<div class=\"session-tag\" style=\"background:"+color+"18;color:"+color+"\">"+item.session_name+"</div>":"")+
-          ctx+mh+nw+
-          "<div class=\"btn-row\">"+
-            "<button class=\"done-btn\" data-id=\""+item.id+"\" data-done=\""+(item.done?"1":"0")+"\">"+(item.done?"↩ 取消完成":"✓ 標為完成")+"</button>"+
-            "<button class=\"bottom-btn\" data-id=\""+item.id+"\" data-project=\""+item.project+"\">↓ 移到最下方</button>"+
-            "<button class=\"notes-btn\" data-id=\""+item.id+"\">\u270f\ufe0f 備注</button>"+
-          "</div>"+
-          "<div class=\"notes-editor\" id=\""+eid+"\">"+
-            "<textarea id=\""+tid+"\" placeholder=\"輸入備注…\">"+((item.notes||"").replace(/</g,"&lt;"))+"</textarea>"+
-            "<div class=\"notes-save-row\">"+
-              "<button class=\"save-btn\" data-id=\""+item.id+"\">儲存</button>"+
-              "<button class=\"cancel-btn\" data-id=\""+item.id+"\">取消</button>"+
-            "</div>"+
-          "</div>"+
-        "</div>";
-      card.querySelector(".done-btn").addEventListener("click",function(e){e.stopPropagation();markDone(this.dataset.id,this.dataset.done==="1",this);});
-      card.querySelector(".bottom-btn").addEventListener("click",function(e){e.stopPropagation();moveToBottom(this.dataset.id,this.dataset.project,this);});
-      card.querySelector(".notes-btn").addEventListener("click",function(e){e.stopPropagation();toggleNotes(this.dataset.id);});
-      card.querySelector(".save-btn").addEventListener("click",function(e){e.stopPropagation();saveNotes(this.dataset.id,this);});
-      card.querySelector(".cancel-btn").addEventListener("click",function(e){e.stopPropagation();toggleNotes(this.dataset.id);});
-      g.appendChild(card);
-    });
-    c.appendChild(g);
-  });
-}
+function updateProgress(){const total=allTodos.length,done=allTodos.filter(function(t){return t.done;}).length;const pct=total?Math.round(done/total*100):0;document.getElementById("progress-fill").style.width=pct+"%";document.getElementById("progress-text").textContent=done+" / "+total+" 項完成";}
+function renderAll(){const container=document.getElementById("todo-list");container.innerHTML="";let visible=showDone?allTodos.slice():allTodos.filter(function(t){return!t.done;});if(minPriority>0)visible=visible.filter(function(t){return(t.priority||0)>=minPriority;});if(sortMode==="desc")visible=visible.slice().sort(function(a,b){return(b.priority||0)-(a.priority||0);});else if(sortMode==="asc")visible=visible.slice().sort(function(a,b){return(a.priority||0)-(b.priority||0);});if(!visible.length){container.innerHTML="<div class=\"loading\">沒有符合條件的項目 🎉</div>";return;}const groups={};if(sortMode!=="none"){groups[""]=visible;}else{visible.forEach(function(t){const p=t.project||"（未分類）";if(!groups[p])groups[p]=[];groups[p].push(t);});}Object.keys(groups).forEach(function(project){const items=groups[project];const color=sortMode!=="none"?"#78716c":getColor(project);const groupEl=document.createElement("div");groupEl.className="project-group";if(project){const label=document.createElement("div");label.className="project-label";label.style.color=color;label.textContent=project;groupEl.appendChild(label);}items.forEach(function(item){const prio=item.priority||0;const card=document.createElement("div");card.className="todo-card"+(item.done?" done":"");const metaParts=[];if(item.url)metaParts.push("<a class=\"meta-link\" href=\""+item.url+"\" target=\"_blank\">🔗 "+item.url.replace(/^https?:\/\//,"").split("/")[0]+"</a>");if(item.location)metaParts.push("<span class=\"meta-loc\">📍 "+item.location+"</span>");const ctxHtml=item.context?"<div class=\"context-text\"><p>"+item.context.split("\n\n").join("</p><p>").split("\n").join("<br>")+"</p></div>":"";const notesHtml=item.notes?"<div class=\"notes-wrap\">📝 "+item.notes+"</div>":"";const metaHtml=metaParts.length?"<div class=\"meta-row\">"+metaParts.join("")+"</div>":"";const badgeHtml=prio>0?"<span class=\"priority-badge\" style=\"background:"+PRIORITY_BG[prio]+";color:"+PRIORITY_FG[prio]+"\">"+PRIORITY_LABELS[prio]+"</span>":"";const opts=PRIORITY_LABELS.map(function(l,i){return"<option value=\""+i+"\"" +(prio===i?" selected":"")+">"+( i===0?"— 未設定":i+" "+l)+"</option>";}).join("");card.innerHTML="<div class=\"todo-header\" data-toggle>"+"<div class=\"dot\" style=\"background:"+color+"\"></div>"+"<div class=\"todo-title\">"+item.title+"</div>"+badgeHtml+"<div class=\"chevron\">▼</div></div>"+"<div class=\"todo-context\">"+(item.session_name?"<div class=\"session-tag\" style=\"background:"+color+"18;color:"+color+"\">"+item.session_name+"</div>":"")+ctxHtml+metaHtml+notesHtml+"<div class=\"btn-row\"><button class=\"done-btn\" data-id=\""+item.id+"\" data-done=\"" +(item.done?"1":"0")+"\">"+(item.done?"↩ 取消完成":"✓ 標為完成")+"</button><button class=\"bottom-btn\" data-id=\""+item.id+"\" data-project=\""+item.project+"\">↓ 移到最下方</button><div class=\"priority-wrap\"><label>重要性</label><select class=\"priority-select\" data-id=\""+item.id+"\">"+opts+"</select></div></div></div>";card.querySelector("[data-toggle]").addEventListener("click",function(){this.parentElement.classList.toggle("open");});card.querySelector(".done-btn").addEventListener("click",function(e){e.stopPropagation();markDone(this.dataset.id,this.dataset.done==="1",this);});card.querySelector(".bottom-btn").addEventListener("click",function(e){e.stopPropagation();moveToBottom(this.dataset.id,this.dataset.project,this);});card.querySelector(".priority-select").addEventListener("change",function(e){e.stopPropagation();setPriority(this.dataset.id,parseInt(this.value),this);});groupEl.appendChild(card);});container.appendChild(groupEl);});}
+document.getElementById("toggle-done-btn").addEventListener("click",toggleDone);
 loadData();
 </script>
 </body>
