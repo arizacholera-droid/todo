@@ -76,7 +76,15 @@
 <script>
 const SUPABASE_URL="https://hwlbadvxnsppojaoqkeh.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGJhZHZ4bnNwcG9qYW9xa2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzgyOTgsImV4cCI6MjA5NzQ1NDI5OH0.iG4Z0YYn7aP_UGTZnx-hYBOrxjTS0NsHi0SaYAraiy0";
-const HEADERS={"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"};
+// ===== 登入 / Session 管理（Magic Link）=====
+// anon key（SUPABASE_KEY）僅作 apikey 標頭與登入端點；資料存取改用登入者 access_token
+const SESS_KEY="sb_session";
+function getSession(){try{return JSON.parse(localStorage.getItem(SESS_KEY)||"null");}catch(e){return null;}}
+function setSession(s){localStorage.setItem(SESS_KEY,JSON.stringify(s));}
+function clearSession(){localStorage.removeItem(SESS_KEY);}
+function accessToken(){const s=getSession();return s&&s.access_token;}
+function authHeaders(extra){const t=accessToken()||SUPABASE_KEY;return Object.assign({"apikey":SUPABASE_KEY,"Authorization":"Bearer "+t},extra||{});}
+function writeHeaders(){return authHeaders({"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"});}
 const COLOR_MAP={"herlilbf åé¤å¹³å°":"#db2777","èªå»ºåé¤ç¶²":"#db2777","ä»è²»é»å­å ±":"#2563eb","ç·¬å çæ£®æ":"#16a34a","ä¸­æåºçè¨å":"#16a34a","ç³»çµ±æ´ç":"#d97706","éæç¶²ç«":"#7c3aed","æå­¸åµä½":"#0891b2","æ²åéæ¨":"#b45309","Cowork Todo List":"#78716c"};
 const EXTRA=["#059669","#dc2626","#9333ea","#0284c7"];
 let colorIdx=0;const ac={};
@@ -89,7 +97,8 @@ document.querySelectorAll("[data-sort]").forEach(function(btn){btn.addEventListe
 document.querySelectorAll("[data-min]").forEach(function(btn){btn.addEventListener("click",function(){minPriority=parseInt(this.dataset.min);document.querySelectorAll("[data-min]").forEach(function(b){b.classList.remove("active");});this.classList.add("active");renderAll();});});
 async function loadData(){
   try{
-    const res=await fetch(SUPABASE_URL+"/rest/v1/todos?select=*&order=project.asc,sort_order.asc,id.asc",{headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY}});
+    const res=await fetch(SUPABASE_URL+"/rest/v1/todos?select=*&order=project.asc,sort_order.asc,id.asc",{headers:authHeaders()});
+    if(res.status===401){if(await refreshSession()){return loadData();}clearSession();showLogin("登入已過期，請重新登入");return;}
     if(!res.ok)throw new Error("HTTP "+res.status);
     const data=await res.json();
     const syncRow=data.find(function(t){return t.id==="__sync__";});
@@ -107,7 +116,7 @@ async function loadData(){
 }
 async function markDone(id,isDone,btnEl){
   btnEl.disabled=true;
-  try{const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:HEADERS,body:JSON.stringify({id:id,done:!isDone})});
+  try{const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:writeHeaders(),body:JSON.stringify({id:id,done:!isDone})});
   if(!res.ok)throw new Error("HTTP "+res.status);
   const t=allTodos.find(function(x){return x.id===id;});if(t)t.done=!isDone;
   renderAll();updateProgress();}catch(e){alert("æ´æ°å¤±æï¼"+e.message);btnEl.disabled=false;}
@@ -116,7 +125,7 @@ async function moveToBottom(id,project,btnEl){
   btnEl.disabled=true;
   try{const sp=allTodos.filter(function(t){return t.project===project&&!t.done;});
   const mx=Math.max.apply(null,[0].concat(sp.map(function(t){return t.sort_order||0;})));
-  const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:HEADERS,body:JSON.stringify({id:id,sort_order:mx+1})});
+  const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:writeHeaders(),body:JSON.stringify({id:id,sort_order:mx+1})});
   if(!res.ok)throw new Error("HTTP "+res.status);
   const t=allTodos.find(function(x){return x.id===id;});if(t)t.sort_order=mx+1;
   allTodos.sort(function(a,b){
@@ -129,7 +138,7 @@ async function moveToBottom(id,project,btnEl){
 }
 async function setPriority(id,value,selectEl){
   selectEl.disabled=true;
-  try{const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:HEADERS,body:JSON.stringify({id:id,priority:value})});
+  try{const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:writeHeaders(),body:JSON.stringify({id:id,priority:value})});
   if(!res.ok)throw new Error("HTTP "+res.status);
   const t=allTodos.find(function(x){return x.id===id;});if(t)t.priority=value;
   renderAll();updateProgress();}catch(e){alert("æ´æ°å¤±æï¼"+e.message);}
@@ -194,7 +203,52 @@ function renderAll(){
   });
 }
 document.getElementById("toggle-done-btn").addEventListener("click",toggleDone);
-loadData();
+// ===== Magic Link 登入流程 =====
+function consumeHashTokens(){
+  if(location.hash&&location.hash.indexOf("access_token=")>=0){
+    const p=new URLSearchParams(location.hash.slice(1));
+    const at=p.get("access_token");
+    if(at){setSession({access_token:at,refresh_token:p.get("refresh_token"),expires_at:p.get("expires_at")});}
+    history.replaceState(null,"",location.pathname+location.search);
+  }
+}
+async function sendMagicLink(email){
+  const r=await fetch(SUPABASE_URL+"/auth/v1/otp?redirect_to="+encodeURIComponent(location.origin+location.pathname),
+    {method:"POST",headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email:email,create_user:true})});
+  return r.ok;
+}
+async function refreshSession(){
+  const s=getSession();if(!s||!s.refresh_token)return false;
+  const r=await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=refresh_token",
+    {method:"POST",headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.refresh_token})});
+  if(!r.ok){clearSession();return false;}
+  const d=await r.json();setSession({access_token:d.access_token,refresh_token:d.refresh_token,expires_at:d.expires_at});return true;
+}
+function showLogin(msg){
+  document.getElementById("filter-bar").style.display="none";
+  document.getElementById("toggle-done-btn").style.display="none";
+  document.getElementById("subtitle").textContent="請登入";
+  document.getElementById("error-area").innerHTML="";
+  document.getElementById("todo-list").innerHTML=
+    "<div style=\"max-width:320px;margin:24px auto;text-align:center\">"+
+    "<p style=\"font-size:13px;color:#57534e;margin-bottom:12px\">"+(msg||"輸入你的信箱，收登入連結")+"</p>"+
+    "<input id=\"login-email\" type=\"email\" placeholder=\"you@example.com\" autocomplete=\"email\" style=\"width:100%;padding:10px;border:1px solid #e7e5e4;border-radius:8px;font-size:14px;margin-bottom:8px\">"+
+    "<button id=\"login-btn\" style=\"width:100%;padding:10px;background:#1c1917;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer\">寄送登入連結</button></div>";
+  document.getElementById("login-btn").addEventListener("click",async function(){
+    const em=document.getElementById("login-email").value.trim();if(!em)return;
+    this.disabled=true;this.textContent="寄送中…";
+    const ok=await sendMagicLink(em);
+    document.getElementById("todo-list").innerHTML="<div class=\"loading\">"+(ok?"登入連結已寄到信箱，點擊後回到此頁即可使用。":"寄送失敗，請確認信箱或稍後再試。")+"</div>";
+  });
+}
+async function init(){
+  consumeHashTokens();
+  const s=getSession();
+  if(s&&s.expires_at&&(parseInt(s.expires_at)*1000-Date.now()<120000)){await refreshSession();}
+  if(!accessToken()){showLogin();return;}
+  loadData();
+}
+init();
 </script>
 </body>
 </html>
