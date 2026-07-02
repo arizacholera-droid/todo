@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brandin çä¸ä¸æ­¥</title>
+<title>Brandin 的下一步</title>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,24 +55,24 @@
 </style>
 </head>
 <body>
-<h1>Brandin çä¸ä¸æ­¥</h1>
-<p class="subtitle" id="subtitle">è¼å¥ä¸­â¦</p>
+<h1>Brandin 的下一步</h1>
+<p class="subtitle" id="subtitle">載入中…</p>
 <div class="progress-label" id="progress-text"></div>
 <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
 <div class="filter-bar" id="filter-bar" style="display:none">
-  <span class="filter-label">æåº</span>
-  <button class="f-btn active" data-sort="none">åé åº</button>
-  <button class="f-btn" data-sort="desc">éè¦æ§ é«âä½</button>
-  <button class="f-btn" data-sort="asc">éè¦æ§ ä½âé«</button>
+  <span class="filter-label">排序</span>
+  <button class="f-btn active" data-sort="none">原順序</button>
+  <button class="f-btn" data-sort="desc">重要性 高→低</button>
+  <button class="f-btn" data-sort="asc">重要性 低→高</button>
   <div class="filter-sep"></div>
-  <span class="filter-label">é¡¯ç¤º</span>
-  <button class="f-btn active" data-min="0">å¨é¨</button>
-  <button class="f-btn" data-min="2">ä¸­ä»¥ä¸</button>
-  <button class="f-btn" data-min="3">é«</button>
+  <span class="filter-label">顯示</span>
+  <button class="f-btn active" data-min="0">全部</button>
+  <button class="f-btn" data-min="2">中以上</button>
+  <button class="f-btn" data-min="3">高</button>
 </div>
 <div id="error-area"></div>
-<div id="todo-list"><div class="loading">æ­£å¨å¾ Supabase è®åè³æâ¦</div></div>
-<button class="show-done-btn" id="toggle-done-btn" style="display:none">é¡¯ç¤ºå·²å®æé ç®</button>
+<div id="todo-list"><div class="loading">正在從 Supabase 讀取資料…</div></div>
+<button class="show-done-btn" id="toggle-done-btn" style="display:none">顯示已完成項目</button>
 <script>
 const SUPABASE_URL="https://hwlbadvxnsppojaoqkeh.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3bGJhZHZ4bnNwcG9qYW9xa2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzgyOTgsImV4cCI6MjA5NzQ1NDI5OH0.iG4Z0YYn7aP_UGTZnx-hYBOrxjTS0NsHi0SaYAraiy0";
@@ -85,11 +85,11 @@ function clearSession(){localStorage.removeItem(SESS_KEY);}
 function accessToken(){const s=getSession();return s&&s.access_token;}
 function authHeaders(extra){const t=accessToken()||SUPABASE_KEY;return Object.assign({"apikey":SUPABASE_KEY,"Authorization":"Bearer "+t},extra||{});}
 function writeHeaders(){return authHeaders({"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"});}
-const COLOR_MAP={"herlilbf åé¤å¹³å°":"#db2777","èªå»ºåé¤ç¶²":"#db2777","ä»è²»é»å­å ±":"#2563eb","ç·¬å çæ£®æ":"#16a34a","ä¸­æåºçè¨å":"#16a34a","ç³»çµ±æ´ç":"#d97706","éæç¶²ç«":"#7c3aed","æå­¸åµä½":"#0891b2","æ²åéæ¨":"#b45309","Cowork Todo List":"#78716c"};
+const COLOR_MAP={"herlilbf 包養平台":"#db2777","自建包養網":"#db2777","付費電子報":"#2563eb","緬因的森林":"#16a34a","中文出版計劃":"#16a34a","系統整理":"#d97706","野果網站":"#7c3aed","文學創作":"#0891b2","戲劇配樂":"#b45309","Cowork Todo List":"#78716c"};
 const EXTRA=["#059669","#dc2626","#9333ea","#0284c7"];
 let colorIdx=0;const ac={};
 function getColor(p){return COLOR_MAP[p]||(ac[p]=ac[p]||EXTRA[colorIdx++%EXTRA.length]);}
-const PRIORITY_LABELS=["â","ä½","ä¸­","é«"];
+const PRIORITY_LABELS=["—","低","中","高"];
 const PRIORITY_BG=["#e7e5e4","#dbeafe","#fef3c7","#fee2e2"];
 const PRIORITY_FG=["#a8a29e","#1d4ed8","#b45309","#dc2626"];
 let allTodos=[],showDone=false,sortMode="none",minPriority=0;
@@ -102,15 +102,15 @@ async function loadData(){
     if(!res.ok)throw new Error("HTTP "+res.status);
     const data=await res.json();
     const syncRow=data.find(function(t){return t.id==="__sync__";});
-    if(syncRow&&syncRow.updated_at){const d=new Date(syncRow.updated_at);document.getElementById("subtitle").textContent="ä¸æ¬¡åæ­¥ï¼"+d.toLocaleDateString("zh-TW",{month:"long",day:"numeric"})+" "+d.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"});}
-    else{document.getElementById("subtitle").textContent="å·²è¼å¥";}
+    if(syncRow&&syncRow.updated_at){const d=new Date(syncRow.updated_at);document.getElementById("subtitle").textContent="上次同步："+d.toLocaleDateString("zh-TW",{month:"long",day:"numeric"})+" "+d.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"});}
+    else{document.getElementById("subtitle").textContent="已載入";}
     allTodos=data.filter(function(t){return t.id!=="__sync__"&&t.title;});
     renderAll();updateProgress();
     document.getElementById("toggle-done-btn").style.display="block";
     document.getElementById("filter-bar").style.display="flex";
   }catch(e){
-    document.getElementById("subtitle").textContent="è¼å¥å¤±æ";
-    document.getElementById("error-area").innerHTML="<div class=\"error-msg\">ç¡æ³é£æ¥ Supabaseï¼"+e.message+"</div>";
+    document.getElementById("subtitle").textContent="載入失敗";
+    document.getElementById("error-area").innerHTML="<div class=\"error-msg\">無法連接 Supabase："+e.message+"</div>";
     document.getElementById("todo-list").innerHTML="";
   }
 }
@@ -119,7 +119,7 @@ async function markDone(id,isDone,btnEl){
   try{const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:writeHeaders(),body:JSON.stringify({id:id,done:!isDone})});
   if(!res.ok)throw new Error("HTTP "+res.status);
   const t=allTodos.find(function(x){return x.id===id;});if(t)t.done=!isDone;
-  renderAll();updateProgress();}catch(e){alert("æ´æ°å¤±æï¼"+e.message);btnEl.disabled=false;}
+  renderAll();updateProgress();}catch(e){alert("更新失敗："+e.message);btnEl.disabled=false;}
 }
 async function moveToBottom(id,project,btnEl){
   btnEl.disabled=true;
@@ -134,22 +134,22 @@ async function moveToBottom(id,project,btnEl){
     if(sa!==sb)return sa-sb;
     return(a.id||"").localeCompare(b.id||"");
   });
-  renderAll();updateProgress();}catch(e){alert("æ´æ°å¤±æï¼"+e.message);btnEl.disabled=false;}
+  renderAll();updateProgress();}catch(e){alert("更新失敗："+e.message);btnEl.disabled=false;}
 }
 async function setPriority(id,value,selectEl){
   selectEl.disabled=true;
   try{const res=await fetch(SUPABASE_URL+"/rest/v1/todos",{method:"POST",headers:writeHeaders(),body:JSON.stringify({id:id,priority:value})});
   if(!res.ok)throw new Error("HTTP "+res.status);
   const t=allTodos.find(function(x){return x.id===id;});if(t)t.priority=value;
-  renderAll();updateProgress();}catch(e){alert("æ´æ°å¤±æï¼"+e.message);}
+  renderAll();updateProgress();}catch(e){alert("更新失敗："+e.message);}
   selectEl.disabled=false;
 }
-function toggleDone(){showDone=!showDone;document.getElementById("toggle-done-btn").textContent=showDone?"é±èå·²å®æé ç®":"é¡¯ç¤ºå·²å®æé ç®";renderAll();}
+function toggleDone(){showDone=!showDone;document.getElementById("toggle-done-btn").textContent=showDone?"隱藏已完成項目":"顯示已完成項目";renderAll();}
 function updateProgress(){
   const total=allTodos.length,done=allTodos.filter(function(t){return t.done;}).length;
   const pct=total?Math.round(done/total*100):0;
   document.getElementById("progress-fill").style.width=pct+"%";
-  document.getElementById("progress-text").textContent=done+" / "+total+" é å®æ";
+  document.getElementById("progress-text").textContent=done+" / "+total+" 項完成";
 }
 function renderAll(){
   const container=document.getElementById("todo-list");container.innerHTML="";
@@ -157,10 +157,10 @@ function renderAll(){
   if(minPriority>0)visible=visible.filter(function(t){return(t.priority||0)>=minPriority;});
   if(sortMode==="desc")visible=visible.slice().sort(function(a,b){return(b.priority||0)-(a.priority||0);});
   else if(sortMode==="asc")visible=visible.slice().sort(function(a,b){return(a.priority||0)-(b.priority||0);});
-  if(!visible.length){container.innerHTML="<div class=\"loading\">æ²æç¬¦åæ¢ä»¶çé ç® ð</div>";return;}
+  if(!visible.length){container.innerHTML="<div class=\"loading\">沒有符合條件的項目 🎉</div>";return;}
   const groups={};
   if(sortMode!=="none"){groups[""]=visible;}
-  else{visible.forEach(function(t){const p=t.project||"ï¼æªåé¡ï¼";if(!groups[p])groups[p]=[];groups[p].push(t);});}
+  else{visible.forEach(function(t){const p=t.project||"（未分類）";if(!groups[p])groups[p]=[];groups[p].push(t);});}
   Object.keys(groups).forEach(function(project){
     const items=groups[project];
     const color=sortMode!=="none"?"#78716c":getColor(project);
@@ -170,27 +170,27 @@ function renderAll(){
       const prio=item.priority||0;
       const card=document.createElement("div");card.className="todo-card"+(item.done?" done":"");
       const metaParts=[];
-      if(item.url)metaParts.push("<a class=\"meta-link\" href=\""+item.url+"\" target=\"_blank\">ð "+item.url.replace(/^https?:\/\//,"").split("/")[0]+"</a>");
-      if(item.location)metaParts.push("<span class=\"meta-loc\">ð "+item.location+"</span>");
+      if(item.url)metaParts.push("<a class=\"meta-link\" href=\""+item.url+"\" target=\"_blank\">🔗 "+item.url.replace(/^https?:\/\//,"").split("/")[0]+"</a>");
+      if(item.location)metaParts.push("<span class=\"meta-loc\">📍 "+item.location+"</span>");
       const ctxHtml=item.context?"<div class=\"context-text\"><p>"+item.context.split("\n\n").join("</p><p>").split("\n").join("<br>")+"</p></div>":"";
-      const notesHtml=item.notes?"<div class=\"notes-wrap\">ð "+item.notes+"</div>":"";
+      const notesHtml=item.notes?"<div class=\"notes-wrap\">📝 "+item.notes+"</div>":"";
       const metaHtml=metaParts.length?"<div class=\"meta-row\">"+metaParts.join("")+"</div>":"";
       const badgeHtml=prio>0?"<span class=\"priority-badge\" style=\"background:"+PRIORITY_BG[prio]+";color:"+PRIORITY_FG[prio]+"\">"+PRIORITY_LABELS[prio]+"</span>":"";
-      const opts=PRIORITY_LABELS.map(function(l,i){return"<option value=\""+i+"\""+(prio===i?" selected":"")+">"+( i===0?"â æªè¨­å®":i+" "+l)+"</option>";}).join("");
+      const opts=PRIORITY_LABELS.map(function(l,i){return"<option value=\""+i+"\""+(prio===i?" selected":"")+">"+( i===0?"— 未設定":i+" "+l)+"</option>";}).join("");
       card.innerHTML=
         "<div class=\"todo-header\" data-toggle>"+
         "<div class=\"dot\" style=\"background:"+color+"\"></div>"+
         "<div class=\"todo-title\">"+item.title+"</div>"+
         badgeHtml+
-        "<div class=\"chevron\">â¼</div>"+
+        "<div class=\"chevron\">▼</div>"+
         "</div>"+
         "<div class=\"todo-context\">"+
         (item.session_name?"<div class=\"session-tag\" style=\"background:"+color+"18;color:"+color+"\">"+item.session_name+"</div>":"")+
         ctxHtml+metaHtml+notesHtml+
         "<div class=\"btn-row\">"+
-        "<button class=\"done-btn\" data-id=\""+item.id+"\" data-done=\""+(item.done?"1":"0")+"\">"+(item.done?"â© åæ¶å®æ":"â æ¨çºå®æ")+"</button>"+
-        "<button class=\"bottom-btn\" data-id=\""+item.id+"\" data-project=\""+item.project+"\">â ç§»å°æä¸æ¹</button>"+
-        "<div class=\"priority-wrap\"><label>éè¦æ§</label>"+
+        "<button class=\"done-btn\" data-id=\""+item.id+"\" data-done=\""+(item.done?"1":"0")+"\">"+(item.done?"↩ 取消完成":"✓ 標為完成")+"</button>"+
+        "<button class=\"bottom-btn\" data-id=\""+item.id+"\" data-project=\""+item.project+"\">↓ 移到最下方</button>"+
+        "<div class=\"priority-wrap\"><label>重要性</label>"+
         "<select class=\"priority-select\" data-id=\""+item.id+"\">"+opts+"</select></div>"+
         "</div></div>";
       card.querySelector("[data-toggle]").addEventListener("click",function(){this.parentElement.classList.toggle("open");});
